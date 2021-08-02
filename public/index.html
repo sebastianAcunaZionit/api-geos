@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geos</title>
+</head>
+<body>
+    <h1>Hola mundo </h1>
+
+
+
+    <input type="color" name="color" id="color">
+    <button id="btnDescarga"> descargar datos </button>
+
+    <pre id="contenedor_api"> </pre>
+
+
+    <button id="btnDescargaHl"> descargar datos high level </button>
+
+    <pre id="contenedor_api_hl"> </pre>
+
+
+    <script>
+
+
+        const buscarCampos = () => {
+
+            fetch('http://localhost:9002/api/geos/high-level', {
+                method:'GET'
+            })
+            .then( response => response.json())
+            .then( response => { 
+                contenedor_api.innerHTML = JSON.stringify(response, '', ' ');
+            })
+
+        }
+        const buscarCamposHL = () => {
+
+            fetch('http://localhost:9002/api/geometry/', {
+                method:'GET'
+            })
+            .then( response => response.json())
+            .then( response => { 
+                contenedor_api_hl.innerHTML = JSON.stringify(response, '', ' ');
+            })
+
+        }
+
+        const contenedor_api = document.querySelector("#contenedor_api");
+        const contenedor_api_hl = document.querySelector("#contenedor_api_hl");
+        const btnDescarga = document.querySelector("#btnDescarga");
+        const btnDescargaHl = document.querySelector("#btnDescargaHl");
+        
+        btnDescarga.addEventListener('click', (ev)=> {
+            ev.preventDefault();
+            buscarCampos();
+        })
+        btnDescargaHl.addEventListener('click', (ev)=> {
+            ev.preventDefault();
+            buscarCamposHL();
+        })
+
+        
+
+    </script>
+</body>
+</html>
