@@ -14,8 +14,8 @@ const getAllgeometries = async (request , response) => {
                Authorization: `ApiKey ${process.env.APIKEYGEOS}`,
             },
             params:{
-                limit:1,
-                page:1
+                limit:4,
+                page:4
             }
         });
         const resp = await instancia.get();

@@ -4,66 +4,93 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+    
     <title>Geos</title>
 </head>
 <body>
-    <h1>Hola mundo </h1>
 
+    <!-- navbar -->
+    <nav class="navbar navbar-light bg-light shadow">
+        <a class="navbar-brand" href="#">Curimapu</a>
+    </nav>
 
+    <!-- alert cargando -->
+    <div id="cargando-cultivos" class="d-none"></div>
 
-    <input type="color" name="color" id="color">
-    <button id="btnDescarga"> descargar datos </button>
+    <div class="container mt-5">
 
-    <pre id="contenedor_api"> </pre>
+        <!-- formulario para mostrar detalle -->
+        <div class="mb-5 bg-white shadow rounded-lg p-3">
+            <h5 class="title mb-3 py-3 text-center">Informacion detalle</h5>
+            <div class="d-flex justify-content-between px-5">
+                <div>
+                    <label>tamaño imagen: ( 1 - 10 )</label>
+                    <input class="d-block form-control w-100 mb-3" type="number" name="tamaño" id="px-tamano" placeholder="Digite aqui...">
+                </div>
+                <div>
+                    <label>fecha desde:</label>
+                    <input class="d-block form-control w-100 mb-3" type="date" name="tamaño" id="fecha-desde">
+                </div>
+                <div>
+                    <label>fecha hasta:</label>
+                    <input class="d-block form-control w-100 mb-3" type="date" name="tamaño" id="fecha-hasta">
+                </div>
+                <div>
+                    <label>Satelite:</label>
+                    <select class="custom-select w-100" name="satellite" id="satellite-cultivo">
+                        <option value="">satellite 1</option>
+                    </select>
+                </div>
+            </div>
+        </div>
 
+        <!-- tabla -->
+        <table class="table table-striped table-bordered table-hover">
+          <thead class="thead-dark">
+            <tr>
+              <th>ID</th>
+              <th>Grupo</th>
+              <th>Tipo</th>
+              <th>Area</th>
+              <th>Detalle</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-1"></tbody>
+        </table>
+      </div>
+    
+      <!-- modal detalle -->
 
-    <button id="btnDescargaHl"> descargar datos high level </button>
+    <div class="modal fade" id="modalDetalle" tabindex="-1" aria-labelledby="modal-detalle" aria-hidden="true">
+        <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel"></h5>
+            <button id="cerrar-modal-cultivo" type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <p id="p-cloudCoverage"></p>
+                    <p id="p-sunElevation"></p>
+                    <p id="p-date"></p>
+                    <p id="p-satellite"></p>
+                    <p id="p-view_id"></p>
+                    <div id="img-cultivo"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+            <button id="btn-cerrar-modal-cultivo" type="button" class="btn btn-primary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+        </div>
+    </div>
 
-    <pre id="contenedor_api_hl"> </pre>
-
-
-    <script>
-
-
-        const buscarCampos = () => {
-
-            fetch('http://localhost:9002/api/geos/high-level', {
-                method:'GET'
-            })
-            .then( response => response.json())
-            .then( response => { 
-                contenedor_api.innerHTML = JSON.stringify(response, '', ' ');
-            })
-
-        }
-        const buscarCamposHL = () => {
-
-            fetch('http://localhost:9002/api/geometry/', {
-                method:'GET'
-            })
-            .then( response => response.json())
-            .then( response => { 
-                contenedor_api_hl.innerHTML = JSON.stringify(response, '', ' ');
-            })
-
-        }
-
-        const contenedor_api = document.querySelector("#contenedor_api");
-        const contenedor_api_hl = document.querySelector("#contenedor_api_hl");
-        const btnDescarga = document.querySelector("#btnDescarga");
-        const btnDescargaHl = document.querySelector("#btnDescargaHl");
-        
-        btnDescarga.addEventListener('click', (ev)=> {
-            ev.preventDefault();
-            buscarCampos();
-        })
-        btnDescargaHl.addEventListener('click', (ev)=> {
-            ev.preventDefault();
-            buscarCamposHL();
-        })
-
-        
-
-    </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="./controller.js"></script>
 </body>
 </html>

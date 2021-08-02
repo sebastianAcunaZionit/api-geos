@@ -11,7 +11,7 @@ const router = Router();
 router.get('/', [] , getAllGeos);
 
 
-router.get('/high-level', [], getHighLevel);
+router.post('/high-level', [], getHighLevel);
 
 
 

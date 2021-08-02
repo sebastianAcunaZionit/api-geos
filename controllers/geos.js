@@ -35,17 +35,19 @@ const getHighLevel = async (request, response) => {
 
     try{
 
+        const {id, from, to, px = 1} = request.body
         const data  = {
             date:{
-                from:"2021-05-01",
-                to:"2021-05-05"
+                from:from,
+                to:to
             },
             bm_type:["NDVI"],
             satellites:["landsat8"],
-            polygon_id:"17072812",
-            px_size:1,
+            polygon_id:id,
+            px_size:px,
             limit:1
         }
+
         const resp = await axios.post(
             `https://hlv.eos.com/api/v1/search?api_key=${process.env.APIKEYGEOS}`,
             JSON.stringify(data),
