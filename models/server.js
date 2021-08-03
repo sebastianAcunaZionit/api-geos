@@ -1,5 +1,6 @@
 const express = require('express')
 const cors = require('cors');
+const fileUpload = require('express-fileupload');
 
 class Server{
 
@@ -15,7 +16,8 @@ class Server{
 
         this.rutas = {
             geos: `${this.baseUrl}/geos`,
-            geometry: `${this.baseUrl}/geometry`
+            geometry: `${this.baseUrl}/geometry`,
+            uploads: `${this.baseUrl}/uploads`
         }
 
 
@@ -38,12 +40,19 @@ class Server{
          //directorio publico
          this.app.use( express.static('public') );
 
+         // carga de archivos
+         this.app.use(fileUpload({
+             useTempFiles: true,
+             tempFileDir: '/tmp/'
+         }))
+
     }
 
 
     routes(){
         this.app.use(this.rutas.geos, require('../routers/geos'))
         this.app.use(this.rutas.geometry, require('../routers/geometry'))
+        this.app.use(this.rutas.uploads, require('../routers/uploads'))
     }
 
 

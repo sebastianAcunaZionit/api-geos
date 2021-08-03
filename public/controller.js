@@ -1,8 +1,9 @@
 
-let idCultivo
+let camposVacios = false
+let idBoton, nombreCultivo, imagenPoligono
 const table = document.querySelector("#tabla-1")
 
-const nombreHuerto = document.getElementById('exampleModalLabel')
+const nombreHuerto = document.getElementById('tituloDetalle')
 const cloudCoverage = document.querySelector("#p-cloudCoverage")
 const sunElevation = document.querySelector("#p-sunElevation")
 const date = document.querySelector("#p-date")
@@ -16,7 +17,12 @@ const divCargando = document.createElement('div')
 const fechaDesde = document.getElementById('fecha-desde')
 const fechaHasta = document.getElementById('fecha-hasta')
 const pxTamano = document.getElementById('px-tamano')
+const botonVerDetalle = document.getElementById('btn-aceptar-modal-form')
 nombreHuerto.textContent = 'Detalle Huerto:'
+
+const bId = document.createElement('b')
+bId.textContent = 'ID: '
+view_id.appendChild(bId)
 
 const bCloud = document.createElement('b')
 bCloud.textContent = 'Cobertura de nubes: '
@@ -27,16 +33,12 @@ bSun.textContent = 'Elevacion del sol: '
 sunElevation.appendChild(bSun)
 
 const bDate = document.createElement('b')
-bDate.textContent = 'Fecha: '
+bDate.textContent = 'Fecha Ultimo registro: '
 date.appendChild(bDate)
 
 const bSatellite = document.createElement('b')
-bSatellite.textContent = 'Satellite: '
+bSatellite.textContent = 'Satelite: '
 satellite.appendChild(bSatellite)
-
-const bId = document.createElement('b')
-bId.textContent = 'ID: '
-view_id.appendChild(bId)
 
 cerrarModalCultivo1.addEventListener('click', (ev) => {
   ev.preventDefault()
@@ -48,18 +50,12 @@ cerrarModalCultivo2.addEventListener('click', (ev) => {
   limpiarCampos()
 })
 
-
-//#red 
-// funciones
-//#
-
 // llenar tabla
 fetch('http://localhost:9002/api/geometry/', {
   method:'GET'
   })
   .then( response => response.json())
   .then( response => {
-
     response.resp.result.forEach(item => {
     let trBody = document.createElement('tr')
     let id = document.createElement('td')
@@ -72,25 +68,15 @@ fetch('http://localhost:9002/api/geometry/', {
     button.appendChild(document.createTextNode('Ver detalle'))
     button.setAttribute('class', 'btn-hover-detalle')
     button.setAttribute('type', 'button')
-    // button.setAttribute('data-toggle', 'modal')
-    // button.setAttribute('data-target', '#modalDetalle')
     button.setAttribute('data-id-poligono', item.id)
     button.setAttribute('data-id-grupo', item.properties.group)
 
     button.addEventListener('click', (ev)=> {
       ev.preventDefault();
-      const idBoton = ev.target.dataset.idPoligono
-      const nombreCultivo = ev.target.dataset.idGrupo
-      const data = {
-        from:fechaDesde.value,
-        to:fechaHasta.value,
-        bm_type:["NDVI"],
-        id:idBoton,
-        px: parseInt(pxTamano.value),
-        limit:1
-      }
+      idBoton = ev.target.dataset.idPoligono
+      nombreCultivo = ev.target.dataset.idGrupo
       // console.log(ev.target.dataset)
-      detalleCultivo(data, nombreCultivo)
+      $('#modalFormDetalle').modal('show')
     })
 
     buttonPolygon.appendChild(button)
@@ -106,20 +92,23 @@ fetch('http://localhost:9002/api/geometry/', {
     trBody.appendChild(buttonPolygon)
     table.appendChild(trBody)
     });
-    
+  })
+
+  botonVerDetalle.addEventListener('click', (ev) => {
+    ev.preventDefault()
+    const data = {
+      from:fechaDesde.value,
+      to:fechaHasta.value,
+      bm_type:["NDVI"],
+      id:idBoton,
+      px: parseInt(pxTamano.value),
+      limit:1
+    }
+    detalleCultivo(data, nombreCultivo)
   })
 
   // detalle cultivo
   const detalleCultivo = (data, nombreCultivo) => {
-
-    // const divCargando = document.createElement('div')
-    // divCargando.classList.add('bg-light', 'p-5', 'w-25', 'mx-auto', 'rounded-lg', 'shadow')
-    // cargandoCultivos.appendChild(divCargando)
-    // const h5Cargando = document.createElement('h4')
-    // h5Cargando.classList.add('text-center', 'text-danger')
-    // h5Cargando.textContent = 'Cargando...'
-    // divCargando.appendChild(h5Cargando)
-    
     cargandoCultivos.classList.replace('d-none', 'fixed')
     divCargando.classList.add('alert', 'alert-primary', 'text-center', 'h4')
     divCargando.setAttribute('role', 'alert')
@@ -136,25 +125,78 @@ fetch('http://localhost:9002/api/geometry/', {
       })
       .then( response => response.json())
       .then( response => { 
-        
-        console.log(response)
-        // cargandoCultivos.removeChild(divCargando)
+              
         cargandoCultivos.removeChild(divCargando)
         cargandoCultivos.classList.replace('fixed', 'd-none')
         $('#modalDetalle').modal('show')
-        response.resp.results.forEach(item => {
-          console.log(item.image.NDVI)
+
+        if (response.resp.meta.found > 0) {
+          response.resp.results.forEach(item => {
+            nombreHuerto.textContent += ` ${nombreCultivo}`
+            view_id.appendChild(document.createTextNode(`${item.view_id}`))
+            cloudCoverage.appendChild(document.createTextNode(`${item.cloudCoverage}%`))
+            sunElevation.appendChild(document.createTextNode(`${item.sunElevation}`))
+            date.appendChild(document.createTextNode(`${item.date}`))
+            satellite.appendChild(document.createTextNode(`${item.satellite}`))
+            guardarImagen(item.image.NDVI)
+          })        
+        }else {
           nombreHuerto.textContent += ` ${nombreCultivo}`
-          cloudCoverage.appendChild(document.createTextNode(`${item.cloudCoverage}`))
-          sunElevation.appendChild(document.createTextNode(`${item.sunElevation}`))
-          date.appendChild(document.createTextNode(`${item.date}`))
-          satellite.appendChild(document.createTextNode(`${item.satellite}`))
-          view_id.appendChild(document.createTextNode(`${item.view_id}`))
-          // imgCultivo.innerHTML = `<img src="${item.image.NDVI} alt="imagen cultivo..."">`
-        })
+          view_id.appendChild(document.createTextNode('Sin informacion'))
+          cloudCoverage.appendChild(document.createTextNode('Sin informacion'))
+          sunElevation.appendChild(document.createTextNode('Sin informacion'))
+          date.appendChild(document.createTextNode('Sin registros en el rango de fechas'))
+          satellite.appendChild(document.createTextNode('Sin informacion'))
+        }
       })
     }
   }
+
+  // let estadoImagen = true
+  const guardarImagen = (url) => {
+    let tiempo = 6000, texto
+    fetch(url, {
+      method: 'GET'
+    })
+    .then(resp => resp.json())
+    .then(resp => {
+        resp.status === 'created'? (texto = 'Creando imagen...'): (texto = 'Error...', tiempo = 1000)
+        let timerInterval;
+        Swal.fire({
+          icon: "info",
+          iconColor: "gray",
+          text: texto,
+          timer: tiempo+1500,
+          timerProgressBar: true,
+          didOpen: () => {
+            Swal.showLoading();
+            timerInterval = setInterval(() => {
+              const content = Swal.getHtmlContainer();
+              if (content) {
+                const b = content.querySelector("b");
+                if (b) {
+                  b.textContent = Swal.getTimerLeft();
+                }
+              }
+            }, 100);
+          },
+          willClose: () => {
+            clearInterval(timerInterval);
+          },
+        });
+    })
+      setTimeout(() => {
+        fetch(url, {
+          method: 'GET'
+        })
+        .then(resp => resp.json())
+        .then(resp => {
+          imagenPoligono = resp.url
+          console.log(imagenPoligono)
+          imgCultivo.innerHTML = `<img src="${resp.url}" alt="imagen cultivo">`
+        }) 
+      }, tiempo)
+    }
 
   const limpiarCampos = () => {
     nombreHuerto.textContent = 'Detalle Huerto:'
