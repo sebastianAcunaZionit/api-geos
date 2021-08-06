@@ -15,7 +15,7 @@ const getAllgeometries = async (request , response) => {
             },
             params:{
                 limit:4,
-                page:4
+                page:1
             }
         });
         const resp = await instancia.get();

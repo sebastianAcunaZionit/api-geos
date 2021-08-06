@@ -1,2 +1,4 @@
 /node_modules
 .env
+/uploads/*.tiff
+/uploads/kmz/*

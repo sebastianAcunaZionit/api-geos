@@ -11,7 +11,10 @@ const router = Router();
 router.get('/', [] , getAllGeos);
 
 
-router.post('/high-level', [], getHighLevel);
+router.post('/high-level', [
+    check("id", "debe venir un id de poligono").notEmpty(),
+    validarCampos
+], getHighLevel);
 
 
 

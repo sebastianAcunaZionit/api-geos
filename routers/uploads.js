@@ -1,9 +1,11 @@
 const {Router} = require('express')
 const {check} = require('express-validator')
-const { cargarArchivo } = require('../controllers/uploads')
+const { cargarArchivo, cargarKmz } = require('../controllers/uploads')
 
 const router = Router()
 
-router.post('/', cargarArchivo)
+router.post('/', cargarArchivo);
 
-module.exports= router
+router.post('/kmz', cargarKmz);
+
+module.exports = router
