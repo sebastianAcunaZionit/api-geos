@@ -9,10 +9,8 @@ const cargarArchivo = async(req, res = response) => {
   }
 
   const nombre = await subirArchivo(req.files)
-  console.log(nombre);
   res.json({nombre})
 }
-
 
 
 const cargarKmz  = async (req = require, res = response) => {

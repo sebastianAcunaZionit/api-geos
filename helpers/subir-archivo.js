@@ -1,13 +1,14 @@
-
+const  fs  = require("fs");
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const parseKMZ = require("parse2-kmz");
+const { decode } = require("decode-tiff");
+const  PNG  = require("pngjs").PNG;
 
-const porDefecto = ['png', 'jpg', 'jpeg', 'tiff']
 const kmzType = ['application/vnd.google-earth.kmz']
 
 
-const subirArchivo = ( files, extensionesValidas =  [ 'png','jpg', 'jpeg', 'gif'], carpeta = '' ) => {
+const subirArchivo = ( files, extensionesValidas =  [ 'png','jpg', 'jpeg', 'gif', 'tiff'], carpeta = '' ) => {
 
 
     return new Promise( (resolve, reject) => {
@@ -33,6 +34,13 @@ const subirArchivo = ( files, extensionesValidas =  [ 'png','jpg', 'jpeg', 'gif'
     });
 }
 
+
+const transformarPNG = ( nombreRutaImagen ) => {
+  const { width, height, data } = decode( fs.readFileSync(nombreRutaImagen));
+  const png = new PNG({ width, height })
+  png.data = data;
+  return  PNG.sync.write(png);
+}
 
 // transformamos kmz en json.
 const transformarKmz = async ( kmz ) => await parseKMZ.toJson( kmz );
@@ -68,11 +76,12 @@ const prepararKmz = async ( files ) => {
       coordenadas
     }
 
-    return { ok:true, archivo: files.archivo,  jsonFinal};
+    return { ok:true, archivo: files.archivo,  jsonFinal };
 }
 
 
 module.exports = {
   subirArchivo,
-  prepararKmz
+  prepararKmz,
+  transformarPNG
 }

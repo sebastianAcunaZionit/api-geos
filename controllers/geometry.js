@@ -14,7 +14,7 @@ const getAllgeometries = async (request , response) => {
                Authorization: `ApiKey ${process.env.APIKEYGEOS}`,
             },
             params:{
-                limit:4,
+                limit:100,
                 page:1
             }
         });

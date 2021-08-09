@@ -12,7 +12,7 @@ router.get('/', [] , getAllGeos);
 
 
 router.post('/high-level', [
-    check("id", "debe venir un id de poligono").notEmpty(),
+    check("polygon_id", "debe venir un polygon_id de poligono").notEmpty(),
     validarCampos
 ], getHighLevel);
 
