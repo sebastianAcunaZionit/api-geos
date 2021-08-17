@@ -13,7 +13,7 @@ const cargarArchivo = async(req, res = response) => {
 }
 
 
-const cargarKmz  = async (archivos) => await prepararKmz( archivos.files );
+const cargarKmz  = async (archivos) => await prepararKmz( archivos );
 
 
 module.exports = {
