@@ -11,8 +11,6 @@ const router = Router();
 
 
 router.post('/create', [
-    check("especie", "Debe agregar una especie").notEmpty(),
-    check("anno", "Debe agregar un año").notEmpty(),
     validarCampos
 ], createField);
 
