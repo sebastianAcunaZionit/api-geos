@@ -32,6 +32,7 @@ const createField = async (request, response) => {
 
     const archivo = await cargarKmz(files);
 
+    console.log(archivo);
 
     const jsonEnviar = {
         type:"Feature",
