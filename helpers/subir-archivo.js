@@ -5,7 +5,7 @@ const parseKMZ = require("parse2-kmz");
 const { decode } = require("decode-tiff");
 const  PNG  = require("pngjs").PNG;
 
-const kmzType = ['application/vnd.google-earth.kmz', 'application/vnd.google-earth.kmz']
+const kmzType = ['application/vnd.google-earth.kmz', 'application/octet-stream']
 
 
 const subirArchivo = ( files, extensionesValidas =  [ 'png','jpg', 'jpeg', 'gif', 'tiff'], carpeta = '' ) => {
