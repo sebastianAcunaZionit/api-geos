@@ -34,7 +34,7 @@ const createField = async (request, response) => {
 
     if(!archivo.ok){
         response.status(400)
-        .json({ ok:false, msg:archivo,msg }) 
+        .json({ ok:false, msg:archivo.msg }) 
     }
     console.log(files);
 
