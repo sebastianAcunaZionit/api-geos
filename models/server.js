@@ -52,7 +52,8 @@ class Server{
     middlewares(){
 
         this.app.use( cors( {
-            origin: "*"
+            origin: "*",
+            methods:["POST", "GET", "PUT"]
         }) );
 
          // lectura y parseo del body
