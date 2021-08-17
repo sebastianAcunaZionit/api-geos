@@ -30,7 +30,7 @@ const createField = async (request, response) => {
         .json({ ok:false, msg:"No existe anexo" }) 
     }
 
-    const archivo = await cargarKmz(request, response);
+    const archivo = await cargarKmz(files);
 
 
     const jsonEnviar = {

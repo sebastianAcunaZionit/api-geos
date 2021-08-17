@@ -13,9 +13,8 @@ const cargarArchivo = async(req, res = response) => {
 }
 
 
-const cargarKmz  = async (req = require, res = response) => {
+const cargarKmz  = async (archivo) => {
 
-  const { archivo } = req.files;
 
   if (!archivo || Object.keys(archivo).length === 0 || !archivo) {
     return res.status(400).json('No hay archivos en la peticion.');
