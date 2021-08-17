@@ -1,12 +1,11 @@
 const { default: axios } = require("axios");
 const { json } = require("express");
 
-const { getHighLevel } = require('./geos')
 
 
 const createGeometry = async (request, response) => { 
 
-    const {  field_id, solocrea = true } = request.body
+    const {  field_id } = request.body
 
 
     try{
@@ -50,15 +49,7 @@ const createGeometry = async (request, response) => {
         }
 
 
-        // if(solocrea){
-            response.status(200).json({ ok:true, polygon:geometryResponse.data }) 
-        // }else{
-
-        //     request.body.id = geometryResponse.data.id;
-        //     request.body.coordinates = field.data.geometry.coordinates;
-
-        //     getHighLevel(request, response);
-        // }
+        response.status(200).json({ ok:true, polygon:geometryResponse.data }) 
 
 
 

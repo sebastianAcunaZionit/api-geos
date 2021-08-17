@@ -21,12 +21,7 @@ const cargarKmz  = async (req = require, res = response) => {
     return res.status(400).json('No hay archivos en la peticion.');
   }
   
-  const kmz = await prepararKmz( req.files )
-
-  res.status(201).json({
-    req:kmz
-  })
-
+  return await prepararKmz( req.files )
 }
 
 module.exports = {

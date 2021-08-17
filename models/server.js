@@ -18,7 +18,8 @@ class Server{
         this.rutas = {
             geos: `${this.baseUrl}/geos`,
             geometry: `${this.baseUrl}/geometry`,
-            uploads: `${this.baseUrl}/uploads`
+            uploads: `${this.baseUrl}/uploads`,
+            fields: `${this.baseUrl}/fields`
         }
 
 
@@ -74,6 +75,7 @@ class Server{
         this.app.use(this.rutas.geos, require('../routers/geos'))
         this.app.use(this.rutas.geometry, require('../routers/geometry'))
         this.app.use(this.rutas.uploads, require('../routers/uploads'))
+        this.app.use(this.rutas.fields, require('../routers/fields'))
     }
 
 

@@ -49,11 +49,13 @@ const transformarKmz = async ( kmz ) => await parseKMZ.toJson( kmz );
 const prepararKmz = async ( files ) => {
 
     if( !kmzType.includes( files.archivo.mimetype ) ){
-      return { ok:false, archivo: files.archivo }
+      return { ok:false, msg:`Archivo debe ser .kmz` }
     }
 
     const archivoSubido = await subirArchivo( files, ["kmz"], "kmz" );
     const parsedKmz  = await transformarKmz( archivoSubido );
+
+    fs.rmSync( archivoSubido );
 
 
     const LatLongKmz = parsedKmz.features[0].geometry.coordinates[0];
@@ -64,7 +66,15 @@ const prepararKmz = async ( files ) => {
     })
 
     const indexGuionAnexo = files.archivo.name.indexOf("-");
-    const nombreAgricultor = files.archivo.name.split("_")[0];
+    if(indexGuionAnexo.length < 0){
+      return { ok:false, msg:`Archivo contener solo un '-' para el nombre de anexo (20-AB123)` }
+    }
+    let nombreAgricultor = files.archivo.name.split("_");
+    if(nombreAgricultor.length <= 1){
+      return { ok:false, msg:`Archivo contener solo un '_' separando el nombre de agricultor con el anexo (agricultor_anexo)` }
+    }
+
+    nombreAgricultor = nombreAgricultor[0];
     let nombreAnexo = "";
     for(let i = -2; i <= 6; i++){
       nombreAnexo+=`${files.archivo.name[indexGuionAnexo + i]}`;
@@ -76,7 +86,7 @@ const prepararKmz = async ( files ) => {
       coordenadas
     }
 
-    return { ok:true, archivo: files.archivo,  jsonFinal };
+    return { ok:true, jsonFinal };
 }
 
 

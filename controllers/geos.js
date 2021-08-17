@@ -7,8 +7,6 @@ const {
     DatoExport, 
     DatoVegetable 
 } = require('../models/database/datos-geos');
-const { dbExport } = require("../database/connection");
-const e = require("express");
 
 //endpoint high-level
 //endpoint statistics
