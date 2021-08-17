@@ -13,15 +13,8 @@ const cargarArchivo = async(req, res = response) => {
 }
 
 
-const cargarKmz  = async (archivo) => {
+const cargarKmz  = async (archivos) => await prepararKmz( archivos.files );
 
-
-  if (!archivo || Object.keys(archivo).length === 0 || !archivo) {
-    return res.status(400).json('No hay archivos en la peticion.');
-  }
-  
-  return await prepararKmz( req.files )
-}
 
 module.exports = {
   cargarArchivo,
