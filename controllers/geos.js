@@ -250,6 +250,7 @@ const getHighLevel = async (request, response) => {
             let fecha_stats_ndmi = '';
             let obs_stats_error = '';
 
+            console.log(statics.data.errors);
             if(statics.data.errors.length > 0){
                 fecha_stats_ndvi = statics.data.errors[0].date;
                 fecha_stats_ndmi = statics.data.errors[0].date;
@@ -268,8 +269,9 @@ const getHighLevel = async (request, response) => {
 
             let insertProblems = [];
             
-            if(existeGeos){
+            if(existeGeos.length > 0){
 
+                console.log(" geos 1", existeGeos)
                 console.log(" geos ", existeGeos.id_dato_geos)
                
                 const update = await Entity.update(
