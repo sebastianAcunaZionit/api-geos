@@ -118,7 +118,7 @@ const getHighLevel = async (request, response) => {
 
             return response.status(201).json({
                 ok:false,
-                resp:"sin datos encontrados"
+                msg:"sin datos encontrados"
             })
         }
 
@@ -347,6 +347,7 @@ const getHighLevel = async (request, response) => {
 
             //insert para el tema de los stats
             return response.status(200).json({
+                ok:true,
                 img: arrayImagenes,
                 stats:statics.data,
                 insertProblems
@@ -376,7 +377,6 @@ const deleteField = async(request, response) => {
 
         const resp = await instancia.delete();
 
-        console.log(resp);
 
 
     }catch( err ){
