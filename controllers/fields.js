@@ -27,7 +27,7 @@ const createField = async (request, response) => {
 
     if(!existeAnexo){
         response.status(400)
-        .json({ ok:false, msg:"No existe anexo" }) 
+        .json({ ok:false, msg:"Ficha sin anexo asociado. " }) 
     }
 
     const archivo = await cargarKmz(files);
@@ -36,12 +36,18 @@ const createField = async (request, response) => {
         response.status(400)
         .json({ ok:false, msg:archivo.msg }) 
     }
-    console.log(files);
+
+
+    if(existeAnexo.id_field_eos != ""){
+        response.status(400)
+        .json({ ok:false, msg:"Field ya creado para esta ficha/anexo "}) 
+    }
+
 
     const jsonEnviar = {
         type:"Feature",
         properties:{
-            name:`${archivo.jsonFinal.nombreAnexo}`,
+            name:`${existeAnexo.num_anexo}`,
             group:`BY API`,
             // years_data:[
             //     {
@@ -56,6 +62,8 @@ const createField = async (request, response) => {
             coordinates:[archivo.jsonFinal.coordenadas]
         }
     }
+
+    
 
     const fieldResponse = await axios.post(`${process.env.URLBASEFIELD}?api_key=${process.env.APIKEYGEOS}`,
         jsonEnviar, 
