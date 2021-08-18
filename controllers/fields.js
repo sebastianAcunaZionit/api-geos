@@ -38,7 +38,7 @@ const createField = async (request, response) => {
     }
 
 
-    if(existeAnexo.id_field_eos != ""){
+    if(existeAnexo.id_field_eos != "" && existeAnexo.id_field_eos != null){
         return response.status(400)
         .json({ ok:false, msg:"Field ya creado para esta ficha/anexo "}) 
     }
