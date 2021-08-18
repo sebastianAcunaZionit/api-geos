@@ -14,7 +14,7 @@ const createField = async (request, response) => {
 
     // console.log(files);
     if(!files){
-        response.status(406)
+        return response.status(406)
         .json({ ok:false, msg:"Debe ingresar un archivo" }) 
     }
 
@@ -26,20 +26,20 @@ const createField = async (request, response) => {
     const existeAnexo = await Entity.findOne({where:{id_ficha:id_ficha}})
 
     if(!existeAnexo){
-        response.status(400)
+        return response.status(400)
         .json({ ok:false, msg:"Ficha sin anexo asociado. " }) 
     }
 
     const archivo = await cargarKmz(files);
 
     if(!archivo.ok){
-        response.status(400)
+        return response.status(400)
         .json({ ok:false, msg:archivo.msg }) 
     }
 
 
     if(existeAnexo.id_field_eos != ""){
-        response.status(400)
+        return response.status(400)
         .json({ ok:false, msg:"Field ya creado para esta ficha/anexo "}) 
     }
 
@@ -75,7 +75,7 @@ const createField = async (request, response) => {
 
     
     if(!fieldResponse){
-        response.status(404)
+        return response.status(404)
         .json({ ok:false, msg:"Field no creado" }) 
     }
 
@@ -83,18 +83,18 @@ const createField = async (request, response) => {
 
     
 
-    const updateAnexo = await Entity.update({
-        id_field_eos:createdField.id
-    },
-    { where: {id_ac:existeAnexo.id_ac} });
+    const updateAnexo = await Entity.update(
+    { id_field_eos:createdField.id  },
+    { where: {id_ac:existeAnexo.id_ac} }
+    );
 
     if(!updateAnexo){
-        response.status(400)
-        .json({ ok:false, msg:"No updateo anexo" }) 
+        return response.status(400)
+        .json({ ok:false, msg:"No updateo anexo" });
     }
 
 
-    response.status(200)
+   return  response.status(200)
         .json({ ok:true, createdField, anexo:updateAnexo.data}) 
 
 }
