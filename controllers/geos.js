@@ -240,23 +240,22 @@ const getHighLevel = async (request, response) => {
             { headers:{ 'Content-Type':'application/json' } }
         )
 
-        await delay(4000);
+        await delay(9000);
 
         const urlstatic = 
         `${ process.env.URLBASESTATS }/${ stats.data.task_id  }?api_key=${process.env.APIKEYGEOS}`;
 
         const statics = await axios.get(urlstatic);
 
-        await delay(4000);
 
         
-            const Entity = 
-            (ambiente === 'desarrollo') ?
-            (sistema === 'export') ? DatoExport : DatoVegetable :
-            (sistema === 'export') ? DatoExportProd: DatoVegetableProd;
+        const Entity = 
+        (ambiente === 'desarrollo') ?
+        (sistema === 'export') ? DatoExport : DatoVegetable :
+        (sistema === 'export') ? DatoExportProd: DatoVegetableProd;
 
-            let insertProblems = [];
-            // insert para el tema imagenes.
+        let insertProblems = [];
+        // insert para el tema imagenes.
             for (const im of arrayImagenes ) {
                 
                 const where  = {
@@ -270,6 +269,7 @@ const getHighLevel = async (request, response) => {
                 }
                 
                 const existeGeos = await Entity.findOne(where);
+
 
                 let stats_max_ndvi = 0;
                 let stats_min_ndvi = 0;
@@ -285,7 +285,7 @@ const getHighLevel = async (request, response) => {
                     fecha_stats_ndvi = statics.data.errors[0].date;
                     fecha_stats_ndmi = statics.data.errors[0].date;
                     obs_stats_error = statics.data.errors[0].error;
-                }else{
+                }else if(statics.data.result){
                     fecha_stats_ndvi = statics.data.result[0].date;
                     fecha_stats_ndmi = statics.data.result[0].date;
                     stats_max_ndvi = statics.data.result[0].indexes.NDVI.max;
