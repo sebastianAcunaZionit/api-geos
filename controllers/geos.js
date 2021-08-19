@@ -126,6 +126,8 @@ const getHighLevel = async (request, response) => {
             })
         }
 
+
+
         //recorro respuesta y armo array con todo lo necesario.
         const arrayImagenes = await Promise.all(results.map( async ( level, index ) => {
             const client = new ftp.Client()
@@ -133,12 +135,13 @@ const getHighLevel = async (request, response) => {
             const problemas = [];
 
             // client.ftp.verbose = true
+            
 
             try {
                 await client.access({
                     host:`${ process.env.IPFTP }`,
-                    user:`${ process.env.USERFTP }`,
-                    password:`${ process.env.PASSFTP }`,
+                    user:`${ (sistema == "export") ? process.env.USERFTP : process.env.USERFTPVEG }`,
+                    password:`${ (sistema == "export") ?  process.env.PASSFTP : process.env.PASSFTPVEG }`,
                     port:21,
                     secure: false
                 });
@@ -160,9 +163,12 @@ const getHighLevel = async (request, response) => {
             const imageNDVI = await axios.get(level.image.NDVI, { method:'GET'});
             const imageNDMI = await axios.get(level.image.NDMI, { method:'GET'});
 
+            const rutaFtp = (ambiente == "desarrollo") ?
+            (sistema == "export") ? process.env.RUTAFTP : process.env.RUTAFTPVEGETABLES :
+            (sistema == "export") ? process.RUTAFTPPROD:  process.env.RUTAFTPVEGETABLESPROD ;
 
             const nombreRutaImagen = `${__dirname}/../uploads/img/tiff/${nombreImagen}.tiff`;
-            const nombreRutaImagenFTP = `${process.env.RUTAFTP}/${process.env.CARPETAIMGGEOS}/${nombreImagen}.tiff`;
+            const nombreRutaImagenFTP = `${rutaFtp}/${process.env.CARPETAIMGGEOS}/${nombreImagen}.tiff`;
 
             if(imageNDVI.data.task_type === "finished"){
                 // se descarga imagen tiff
@@ -181,7 +187,7 @@ const getHighLevel = async (request, response) => {
                 }
             }
             const nombreRutaImagenNDMI = `${__dirname}/../uploads/img/tiff/${nombreImagenNDMI}.tiff`;
-            const nombreRutaImagenFTPNDMI = `${process.env.RUTAFTP}/${process.env.CARPETAIMGGEOS}/${nombreImagenNDMI}.tiff`;
+            const nombreRutaImagenFTPNDMI = `${rutaFtp}/${process.env.CARPETAIMGGEOS}/${nombreImagenNDMI}.tiff`;
 
             if(imageNDMI.data.task_type === "finished"){
                 const rawImageNDMI = await axios.get(imageNDMI.data.url, { method:'GET', responseType:'arraybuffer'});
