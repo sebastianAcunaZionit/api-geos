@@ -165,7 +165,7 @@ const getHighLevel = async (request, response) => {
 
             const rutaFtp = (ambiente == "desarrollo") ?
             (sistema == "export") ? process.env.RUTAFTP : process.env.RUTAFTPVEGETABLES :
-            (sistema == "export") ? process.RUTAFTPPROD:  process.env.RUTAFTPVEGETABLESPROD ;
+            (sistema == "export") ? process.env.RUTAFTPPROD:  process.env.RUTAFTPVEGETABLESPROD ;
 
             const nombreRutaImagen = `${__dirname}/../uploads/img/tiff/${nombreImagen}.tiff`;
             const nombreRutaImagenFTP = `${rutaFtp}/${process.env.CARPETAIMGGEOS}/${nombreImagen}.tiff`;
