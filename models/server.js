@@ -1,7 +1,10 @@
 const express = require('express')
 const cors = require('cors');
 const fileUpload = require('express-fileupload');
-const  { dbExport, dbVegetables }  = require('../database/connection');
+const  { 
+    dbExport, dbVegetables, 
+    dbExportProd, dbVegetablesProd 
+}  = require('../database/connection');
 
 class Server{
 
@@ -39,9 +42,14 @@ class Server{
             await dbExport.authenticate();
             console.log('Database Export Online...');
 
-
             await dbVegetables.authenticate();
             console.log('Database Vegetables Online...');
+
+            await dbExportProd.authenticate();
+            console.log('Database export Produccion Online...');
+
+            await dbVegetablesProd.authenticate();
+            console.log('Database Vegetables Produccion Online...');
 
         } catch ( error ) {
             throw new Error( error );

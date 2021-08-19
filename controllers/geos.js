@@ -6,12 +6,16 @@ const { Op } = require("sequelize");
 
 const { 
     DatoExport, 
-    DatoVegetable 
+    DatoVegetable, 
+    DatoVegetableProd,
+    DatoExportProd
 } = require('../models/database/datos-geos');
 
 const { 
     AnexoExport, 
-    AnexoVegetable 
+    AnexoVegetable, 
+    AnexoExportProd,
+    AnexoVegetableProd
 } = require('../models/database/anexo-contrato');
 
 //endpoint high-level
@@ -55,7 +59,7 @@ const getHighLevel = async (request, response) => {
             polygon_id, from, to, px_size = 1, 
             bm_type = ["NDVI", "NDMI"], 
             satellites = ["landsat8"],limit = 1, 
-            ambiente = 'export'
+            ambiente = 'desarrollo', sistema = 'export'
         } = request.body;
 
 
@@ -74,9 +78,9 @@ const getHighLevel = async (request, response) => {
 
         //se obtiene conexion a bd y se busca anexo por id poligono 
         const Anexo = 
-            (ambiente === 'export') ?
-            AnexoExport :
-            AnexoVegetable;
+        (ambiente === 'desarrollo') ?
+        (sistema === 'export') ? AnexoExport : AnexoVegetable :
+        (sistema === 'export') ? AnexoExportProd: AnexoVegetableProd;
 
         
         const existeAnexo = await Anexo.findOne({where:{id_polygon_eos:polygon_id}})
@@ -225,6 +229,7 @@ const getHighLevel = async (request, response) => {
                     date_start:from,
                     date_end:to,
                     limit,
+                    max_cloud_cover_in_aoi:50,
                     reference:uuidv4(),
                     geometry:{
                         type:"Polygon",
@@ -245,11 +250,10 @@ const getHighLevel = async (request, response) => {
         await delay(4000);
 
         
-
             const Entity = 
-            (ambiente === 'export') ?
-            DatoExport :
-            DatoVegetable;
+            (ambiente === 'desarrollo') ?
+            (sistema === 'export') ? DatoExport : DatoVegetable :
+            (sistema === 'export') ? DatoExportProd: DatoVegetableProd;
 
             let insertProblems = [];
             // insert para el tema imagenes.
@@ -277,7 +281,7 @@ const getHighLevel = async (request, response) => {
                 let fecha_stats_ndmi = '';
                 let obs_stats_error = '';
 
-                if(statics.data.errors.length > 0){
+                if( statics.data.errors ){
                     fecha_stats_ndvi = statics.data.errors[0].date;
                     fecha_stats_ndmi = statics.data.errors[0].date;
                     obs_stats_error = statics.data.errors[0].error;

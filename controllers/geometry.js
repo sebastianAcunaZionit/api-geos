@@ -1,19 +1,21 @@
 const { default: axios } = require("axios");
 const { 
     AnexoExport, 
-    AnexoVegetable 
+    AnexoVegetable, 
+    AnexoExportProd,
+    AnexoVegetableProd
 } = require('../models/database/anexo-contrato');
 
 
 const createGeometry = async (request, response) => { 
 
-    const {  field_id, ambiente = 'export' } = request.body
+    const {  field_id, ambiente = 'desarrollo', sistema = 'export' } = request.body
 
 
     const Entity = 
-    (ambiente === 'export') ?
-    AnexoExport :
-    AnexoVegetable;
+    (ambiente === 'desarrollo') ?
+    (sistema === 'export') ? AnexoExport : AnexoVegetable :
+    (sistema === 'export') ? AnexoExportProd: AnexoVegetableProd;
 
     try{
 

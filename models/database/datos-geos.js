@@ -1,6 +1,6 @@
 
 const { DataTypes, Sequelize }  = require('sequelize');
-const  {dbExport, dbVegetables}  = require('../../database/connection');
+const  {dbExport, dbVegetables, dbExportProd, dbVegetablesProd}  = require('../../database/connection');
 
 const columns = {
     id_dato_geos:{
@@ -67,8 +67,24 @@ const DatoVegetable = dbVegetables.define(
     }
 );
 
+const DatoExportProd = dbExportProd.define(
+    'dato', columns, 
+    {
+        tableName:'datos_geos',
+        timestamps:false       
+    }
+);
+const DatoVegetableProd = dbVegetablesProd.define(
+    'dato', columns, 
+    {
+        tableName:'datos_geos',
+        timestamps:false       
+    }
+);
+
 
 
 module.exports = {
-    DatoExport,DatoVegetable
+    DatoExport,DatoVegetable,
+    DatoExportProd,DatoVegetableProd
 };

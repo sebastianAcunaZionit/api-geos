@@ -11,4 +11,15 @@ const dbVegetables  = new Sequelize(process.env.DB_SECONDARY, process.env.USER_B
     timezone:'-04:00'
 });
 
-module.exports = { dbExport, dbVegetables }
+const dbExportProd  = new Sequelize(process.env.DB_PRIMARY, process.env.USER_BD, process.env.PASS_BD,{
+    host: process.env.SERVER_BD_PROD,
+    dialect: 'mariadb',
+    timezone:'-04:00'
+});
+const dbVegetablesProd  = new Sequelize(process.env.DB_SECONDARY, process.env.USER_BD, process.env.PASS_BD,{
+    host: process.env.SERVER_BD_PROD,
+    dialect: 'mariadb',
+    timezone:'-04:00'
+});
+
+module.exports = { dbExport, dbVegetables, dbExportProd, dbVegetablesProd }

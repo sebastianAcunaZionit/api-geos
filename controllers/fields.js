@@ -4,12 +4,14 @@ const { json } = require("express");
 const { cargarKmz } =  require("./uploads");
 const { 
     AnexoExport, 
-    AnexoVegetable 
+    AnexoVegetable, 
+    AnexoExportProd,
+    AnexoVegetableProd
 } = require('../models/database/anexo-contrato');
 
 const createField = async (request, response) => { 
 
-    const {  id_ficha, id_anexo_envia, ambiente = 'export' } = request.body
+    const {  id_ficha, id_anexo_envia, ambiente = 'desarrollo', sistema = 'export' } = request.body
     const { files } = request;
 
     // console.log(files);
@@ -18,10 +20,11 @@ const createField = async (request, response) => {
         .json({ ok:false, msg:"Debe ingresar un archivo" }) 
     }
 
+
     const Entity = 
-    (ambiente === 'export') ?
-    AnexoExport :
-    AnexoVegetable;
+    (ambiente === 'desarrollo') ?
+    (sistema === 'export') ? AnexoExport : AnexoVegetable :
+    (sistema === 'export') ? AnexoExportProd: AnexoVegetableProd;
 
     const existeAnexo = await Entity.findOne({where:{id_ficha:id_ficha}})
 
