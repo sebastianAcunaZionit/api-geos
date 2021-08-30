@@ -235,7 +235,7 @@ const getHighLevel = async (request, response) => {
                     date_start:from,
                     date_end:to,
                     limit,
-                    max_cloud_cover_in_aoi:50,
+                    // max_cloud_cover_in_aoi:50,
                     reference:uuidv4(),
                     geometry:{
                         type:"Polygon",
