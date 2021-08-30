@@ -49,6 +49,7 @@ const createField = async (request, response) => {
 
     const jsonEnviar = {
         type:"Feature",
+        monetization_included:true,
         properties:{
             name:`${existeAnexo.num_anexo}`,
             group:`BY API`,
