@@ -48,6 +48,15 @@ const columns = {
     },
     obs_stats_error:{
         type:DataTypes.TEXT
+    },
+    ruta_img_vilab:{
+        type:DataTypes.TEXT
+    },
+    promedio_vilab:{
+        type:DataTypes.TEXT
+    },
+    id_vilab:{
+        type:DataTypes.TEXT
     }
 }
 

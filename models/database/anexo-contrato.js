@@ -18,6 +18,9 @@ const columns = {
     },
     id_polygon_eos:{
         type: DataTypes.STRING
+    },
+    id_vilab:{
+        type: DataTypes.BIGINT
     }
 }
 

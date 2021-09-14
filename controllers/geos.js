@@ -58,9 +58,10 @@ const getHighLevel = async (request, response) => {
         const { 
             polygon_id, from, to, px_size = 1, 
             bm_type = ["NDVI", "NDMI"], 
-            satellites = ["landsat8"],limit = 1, 
+            satellites = ["sentinel2"],limit = 1, 
             ambiente = 'desarrollo', sistema = 'export'
         } = request.body;
+
 
 
         // se consulta por poligono en eos
@@ -134,7 +135,7 @@ const getHighLevel = async (request, response) => {
             const imagenes = [];
             const problemas = [];
 
-            // client.ftp.verbose = true
+            client.ftp.verbose = true
             
 
             try {
@@ -157,7 +158,7 @@ const getHighLevel = async (request, response) => {
             await axios.get(level.image.NDVI, { method:'GET'});
             await axios.get(level.image.NDMI, { method:'GET'});
  
-            await delay(4000);
+            await delay(10000);
                 
             //despues de esperar 4 segundos se obtiene link real de foto ( post )
             const imageNDVI = await axios.get(level.image.NDVI, { method:'GET'});
@@ -188,6 +189,8 @@ const getHighLevel = async (request, response) => {
             }
             const nombreRutaImagenNDMI = `${__dirname}/../uploads/img/tiff/${nombreImagenNDMI}.tiff`;
             const nombreRutaImagenFTPNDMI = `${rutaFtp}/${process.env.CARPETAIMGGEOS}/${nombreImagenNDMI}.tiff`;
+
+            console.log(imageNDMI.data);
 
             if(imageNDMI.data.task_type === "finished"){
                 const rawImageNDMI = await axios.get(imageNDMI.data.url, { method:'GET', responseType:'arraybuffer'});
@@ -225,13 +228,21 @@ const getHighLevel = async (request, response) => {
 
         }));
 
+        // ['landsat8' /* con fecha hasta 07-07 */, 'sentinel2' /* encontro */, 
+        // 'landsat4tm' /* no encontro */, 'landsat4mss' /* no encontro */, 
+        // 'landsat5tm'/* no encontro */, 'landsat5mss'/* no encontro */, 'cbers4mux'/* no encontro */, 
+        // 'cbers4awfi'/* no encontro */, 'cbers4pan10m'/* no encontro */, 'modis'/* encontro algo */, 'hl30'/* no encontro */,
+        //  'hs30'/* no encontro */, 'soilmoisture'/* no soporta ndvi */, 'sentinel2l2a'/*  encontro */]
+
+
         // se crea tarea para obtener los stats
         const stats = await axios.post(
             `${process.env.URLBASESTATS}?api_key=${process.env.APIKEYGEOS}`, {
                 type:'mt_stats',
                 params:{
-                    bm_type,
-                    sensors:satellites,
+                    bm_type:["NDVI", "NDMI"],
+                    // sensors:satellites,
+                    sensors:["sentinel2"],
                     date_start:from,
                     date_end:to,
                     limit,
@@ -253,7 +264,11 @@ const getHighLevel = async (request, response) => {
 
         const statics = await axios.get(urlstatic);
 
-
+        
+        // 
+        
+        // ,
+        // 
         
         const Entity = 
         (ambiente === 'desarrollo') ?
