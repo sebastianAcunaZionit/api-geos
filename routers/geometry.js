@@ -4,12 +4,9 @@ const { getAllgeometries, createGeometry } = require('../controllers/geometry');
 
 const {validarCampos}  = require('../helpers/validar-campos')
 
-
 const router = Router();
 
-
 router.get('/', [] , getAllgeometries);
-
 
 router.post('/create', [], createGeometry);
 

@@ -4,11 +4,7 @@ const { createField } = require('../controllers/fields');
 
 const {validarCampos}  = require('../helpers/validar-campos')
 
-
 const router = Router();
-
-
-
 
 router.post('/create', [
     validarCampos

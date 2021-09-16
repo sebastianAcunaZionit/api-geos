@@ -52,6 +52,8 @@ class Server{
             await dbVegetablesProd.authenticate();
             console.log('Database Vegetables Produccion Online...');
 
+            // dbExport.close();
+
         } catch ( error ) {
             throw new Error( error );
         }

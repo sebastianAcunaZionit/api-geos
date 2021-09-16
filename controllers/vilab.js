@@ -19,6 +19,7 @@ const {
 } = require('../models/database/anexo-contrato');
 const { Buffer } = require("buffer");
 
+const { conectarseABd } = require("../database/connection");
 //endpoint high-level
 //endpoint statistics
 
@@ -98,12 +99,8 @@ const getIndicesByFechaAndPredios = async (id, fecha, tipo) => {
             method:'get'
         });
         const resp = await instancia.get();
-        
-        // console.log("tercero",resp.data)
-        // console.log("tercero",resp.status)
         const indices = resp.data.indice;
 
-        // const encontro = predios.filter( item => item.Lote === anexoBusca );
         if(resp.status === 200){
             return indices;
         }
@@ -128,9 +125,6 @@ const getAllPredios = async (request , response) => {
         const fechas = await getFechasByPredio(encontro[0].Id, tipo);
 
 
-        // console.log(fechas);
-
-        
         var buf = Buffer.from(fechas[0].indices[0].Png, 'base64');
         
         
@@ -183,6 +177,8 @@ const getAllPredios = async (request , response) => {
         
         fechas[0].indices[0].imageLocal = `${nombreBdImagen}/${process.env.CARPETAIMGGEOS}/${nombreArchivo}`;
         
+
+
         
         const Anexo = 
         (ambiente === 'desarrollo') ?
@@ -193,9 +189,7 @@ const getAllPredios = async (request , response) => {
         (ambiente === 'desarrollo') ?
         (sistema === 'export') ? DatoExport : DatoVegetable :
         (sistema === 'export') ? DatoExportProd: DatoVegetableProd;
-        
-
-
+    
         // const updateAnexo  = await Anexo.update()
     
         await Anexo.update({id_vilab:encontro[0].Id}, {where:{num_anexo:anexo}});
@@ -214,12 +208,9 @@ const getAllPredios = async (request , response) => {
         if(datos.length > 0){
 
             
-            
-            
-            
-            await Entity.update(
-                {obs_stats_error:textoFallidas, promedio_vilab:fechas[0].indices[0].Promedio, ruta_img_vilab:fechas[0].indices[0].imageLocal},
-                {where:{id_dato_geos:datos[0].id_dato_geos}});
+        await Entity.update(
+            {obs_stats_error:textoFallidas, promedio_vilab:fechas[0].indices[0].Promedio, ruta_img_vilab:fechas[0].indices[0].imageLocal},
+            {where:{id_dato_geos:datos[0].id_dato_geos}});
 
 
         }else{

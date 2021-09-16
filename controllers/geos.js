@@ -17,6 +17,8 @@ const {
     AnexoExportProd,
     AnexoVegetableProd
 } = require('../models/database/anexo-contrato');
+const { conectarseABd } = require("../database/connection");
+const { transformarPNG } = require("../helpers/subir-archivo");
 
 //endpoint high-level
 //endpoint statistics
@@ -48,7 +50,136 @@ const getAllGeos = async (request , response) => {
 
 }
 
+
+
+
+
 const delay = ms => new Promise(res => setTimeout(res, ms));
+
+
+const rutaFtp = (ambiente , sistema) => {
+    return (ambiente == "desarrollo") ?
+            (sistema == "export") ? 
+                `${process.env.RUTAFTP}/${process.env.RUTAVAR}` : 
+                `${process.env.RUTAFTPVEGETABLES}/${process.env.RUTAVARVEG}` 
+            :
+            (sistema == "export") ? 
+                `${process.env.RUTAFTPPROD}/${process.env.RUTAVAR}`:  
+                `${process.env.RUTAFTPVEGETABLESPROD}/${process.env.RUTAVARVEG}` ;
+}
+
+
+const rutaBDImage = (ambiente , sistema) => {
+    return (ambiente == "desarrollo") ?
+    (sistema == "export") ? `${process.env.RUTAVAR}` : `${process.env.RUTAVARVEG}` :
+    (sistema == "export") ? `${process.env.RUTAVAR}`:  `${process.env.RUTAVARVEG}` ;
+}
+
+const obtenerViewId = async (jsonReq = {}) => {
+        /*  
+            se rescatan los datos de peticion
+            meta : contiene cantidad de campos encontrados
+            results: los campos en si
+        */
+            // return {meta:{ found:0 }, results:[]};
+        try{
+
+            const resp = await axios.post(
+                `${process.env.URLBASESEARCH}/sentinel2?api_key=${process.env.APIKEYGEOS}`,
+                JSON.stringify(jsonReq),
+                { headers:{ 'Content-Type':'application/json' } }
+            );
+            return resp.data;
+
+        }catch(error){
+            return {meta:{ found:0 }, results:[], error};
+        }
+}
+
+const crearTareaImagen = async (jsonReq = {}) => {
+
+
+    try{
+
+        const resp = await axios.post(
+            `https://gate.eos.com/api/gdw/api?api_key=${process.env.APIKEYGEOS}`,
+            JSON.stringify(jsonReq),
+            { headers:{ 'Content-Type':'application/json' } }
+        );
+        return resp.data;
+
+    }catch(error){
+        return error;
+    }
+}
+
+
+const fieldExiste = async (field_id) => {
+
+      // se consulta por poligono en eos
+      try{
+        const poligono =  await axios.get(`https://gate.eos.com/api/cz/backend/api/field/${field_id}?api_key=${ process.env.APIKEYGEOS }`);
+
+        return poligono.data;
+
+    }catch( error ){
+        return null;
+    }
+    
+}
+
+//peticion para ver si poligono existe o no en eos.
+const poligonoExiste = async (polygon_id) => {
+
+    // se consulta por poligono en eos
+    try{
+        const poligono =  await axios.get(`${process.env.URLBASEFEATURE}/${polygon_id}`,
+        {headers:{
+            "Authorization":`ApiKey ${ process.env.APIKEYGEOS }`
+        }});
+
+        return poligono.data;
+
+    }catch( error ){
+        return null;
+    }
+    
+    
+}
+
+const taskStatus = async(task_id, responseType) => {
+
+      // se consulta por poligono en eos
+      try{
+        const task =  await axios.get(`https://gate.eos.com/api/gdw/api/${task_id}?api_key=${ process.env.APIKEYGEOS }`, {responseType:responseType});
+            return task.data;
+        }catch( error ){
+            console.log("entro a error task status", error)
+            return null;
+        }
+}
+
+
+const conexionFTP = async (sistema) =>{
+    const client = new ftp.Client()
+    // client.ftp.verbose = true
+    
+    try {
+        await client.access({
+            host:`${ process.env.IPFTP }`,
+            user:`${ (sistema == "export") ? process.env.USERFTP : process.env.USERFTPVEG }`,
+            password:`${ (sistema == "export") ?  process.env.PASSFTP : process.env.PASSFTPVEG }`,
+            port:21,
+            secure: false
+        });
+
+        return client;
+    } catch (error) {
+        return null;
+    }
+
+
+}
 
 //obtener imagenes de campo y estadisticas
 const getHighLevel = async (request, response) => {
@@ -57,185 +188,149 @@ const getHighLevel = async (request, response) => {
 
         const { 
             polygon_id, from, to, px_size = 1, 
-            bm_type = ["NDVI", "NDMI"], 
-            satellites = ["sentinel2"],limit = 1, 
+            bm_type = ["NDVI"], 
+            satellites = ["sentinel2"],limit = 3, 
             ambiente = 'desarrollo', sistema = 'export'
         } = request.body;
 
 
 
-        // se consulta por poligono en eos
-        const poligono = await axios.get(`${process.env.URLBASEFEATURE}/${polygon_id}`,
-        {headers:{
-            "Authorization":`ApiKey ${ process.env.APIKEYGEOS }`
-        }});
+        if(!polygon_id){
+            return response.status(496).json({
+                ok:false, msg:"Debe incluir un id de polygono."
+            })
+        }
 
-        if(!poligono.data){
+        const poligono = await fieldExiste(polygon_id);
+        if(!poligono){
             return response.status(404).json({
                 ok:false, msg:"poligono no encontrado en EOS."
             })
         }
 
+        // return response.status(201).json({
+        //     ok:false, msg:poligono
+        // })
+
 
         //se obtiene conexion a bd y se busca anexo por id poligono 
-        const Anexo = 
-        (ambiente === 'desarrollo') ?
-        (sistema === 'export') ? AnexoExport : AnexoVegetable :
-        (sistema === 'export') ? AnexoExportProd: AnexoVegetableProd;
+        const accion = 
+            (ambiente === 'desarrollo') 
+                ? (sistema === 'export') ? 1 : 2 
+                : (sistema === 'export') ? 3 : 4;
 
-        
-        const existeAnexo = await Anexo.findOne({where:{id_polygon_eos:polygon_id}})
 
-        if(!existeAnexo){
+        const bdCon = await conectarseABd(accion);
+
+        const existeAnexo = await bdCon.query(`SELECT * FROM anexo_contrato WHERE id_field_eos = ${polygon_id} `);
+
+        if(existeAnexo[0].length <= 0){
             return response.status(404).json({
                 ok:false, msg:"Polygono no esta asociado a ningun anexo."
             })
         }
 
-
         //se obtienen las coordenadas.
-        const coordinates = poligono.data.geometry.coordinates;
+        const coordinates = poligono.geometry.coordinates;
 
-        const data  = {
-            date:{ from, to },
-            bm_type,
-            satellites,
-            polygon_id,
-            px_size,
-            limit
+        const data = {
+            limit:1,
+            page:1,
+            intersection_validation:true,
+            sort:{"date":"desc"},
+            search:{
+                date:{ 
+                    nombre:{ from, to }
+                },
+                cloudCoverage:{ from: 0, to: 100 },
+                shape:{
+                    type:"Polygon",
+                    coordinates
+                },
+                shapeRelation:'INTERSECTS'
+            }
         }
-        
-        //se ejecuta peticion para solicitar imagenes
-        const resp = await axios.post(
-                `${process.env.URLBASESEARCH}?api_key=${process.env.APIKEYGEOS}`,
-                JSON.stringify(data),
-                { headers:{ 'Content-Type':'application/json' } }
-            );
 
-        /*  
-            se rescatan los datos de peticion
-            meta : contiene cantidad de campos encontrados
-            results: los campos en si
-        */
-        const { meta, results } = resp.data;
+        const { meta, results:resultadoView, error } = await obtenerViewId(data);
 
         if(meta.found <= 0){
-
             return response.status(201).json({
                 ok:false,
-                msg:"sin datos encontrados"
+                msg:"sin datos encontrados",
             })
         }
 
-
-
-        //recorro respuesta y armo array con todo lo necesario.
-        const arrayImagenes = await Promise.all(results.map( async ( level, index ) => {
-            const client = new ftp.Client()
-            const imagenes = [];
-            const problemas = [];
-
-            client.ftp.verbose = true
-            
-
-            try {
-                await client.access({
-                    host:`${ process.env.IPFTP }`,
-                    user:`${ (sistema == "export") ? process.env.USERFTP : process.env.USERFTPVEG }`,
-                    password:`${ (sistema == "export") ?  process.env.PASSFTP : process.env.PASSFTPVEG }`,
-                    port:21,
-                    secure: false
-                });
-            } catch (error) {
-                problemas.push({ ok:false, smg:error })
+        if(error){
+            return response.status(201).json({
+                ok:false,
+                msg:`problemas [${error}]`,
+            })
+        }
+    
+        const arregloTareaImagen = {
+            type:"jpeg",
+            params:{
+                view_id:resultadoView[0].view_id,
+                bm_type:"NDVI",
+                geometry:{
+                    type:"Polygon",
+                    coordinates
+                },
+                px_size:4,
+                format:"png",
+                reference:uuidv4()
             }
+        }
+
+        const tareaImagen = await crearTareaImagen(arregloTareaImagen);
 
 
-            const nombreImagen = `${uuidv4()}_${existeAnexo.num_anexo}_imagen_${index}_DNVI`;
-            const nombreImagenNDMI = `${uuidv4()}_${existeAnexo.num_anexo}_imagen_${index}_NDMI`;
+        if(!tareaImagen){
+            return response.status(406).json({
+                ok:false,
+                msg:"no se creo tarea para imagen",
+            })
+        }
 
-            //peticion para primera respuesta imagen ( pre )
-            await axios.get(level.image.NDVI, { method:'GET'});
-            await axios.get(level.image.NDMI, { method:'GET'});
- 
+        var sta;
+
+        sta =  await taskStatus(tareaImagen.task_id,'json');
+        await delay(10000);
+        if(sta.status === "created"){
             await delay(10000);
-                
-            //despues de esperar 4 segundos se obtiene link real de foto ( post )
-            const imageNDVI = await axios.get(level.image.NDVI, { method:'GET'});
-            const imageNDMI = await axios.get(level.image.NDMI, { method:'GET'});
+            sta =  await taskStatus(tareaImagen.task_id, 'arraybuffer');
+        }
+        if(!sta){
+            console.log("es null ", sta)
+            return response.status(201).json({
+                ok:false, msg: sta
+            })
+        }
 
-            const rutaFtp = (ambiente == "desarrollo") ?
-            (sistema == "export") ? process.env.RUTAFTP : process.env.RUTAFTPVEGETABLES :
-            (sistema == "export") ? process.env.RUTAFTPPROD:  process.env.RUTAFTPVEGETABLESPROD ;
+        const existeAnexoR = existeAnexo[0][0];
 
-            const nombreRutaImagen = `${__dirname}/../uploads/img/tiff/${nombreImagen}.tiff`;
-            const nombreRutaImagenFTP = `${rutaFtp}/${process.env.CARPETAIMGGEOS}/${nombreImagen}.tiff`;
+        
+        const rutaFtps = rutaFtp(ambiente, sistema);
 
-            if(imageNDVI.data.task_type === "finished"){
-                // se descarga imagen tiff
-                const rawImage = await axios.get(imageNDVI.data.url, { method:'GET', responseType:'arraybuffer'});
-                //se guarda en ruta de backend.
-                fs.writeFileSync(nombreRutaImagen,  rawImage.data); 
-                if(!client.closed){
-                    await client.uploadFrom(`${nombreRutaImagen}`, `${nombreRutaImagenFTP}`)
-                    const tamano = await client.size(nombreRutaImagenFTP);
-                    
-                    if(tamano <= 0){
-                        problemas.push({ok:false, msg:"imagen tiff no se subio correctamente."})
-                    }else{
-                        fs.rmSync(nombreRutaImagen)
-                    }
-                }
-            }
-            const nombreRutaImagenNDMI = `${__dirname}/../uploads/img/tiff/${nombreImagenNDMI}.tiff`;
-            const nombreRutaImagenFTPNDMI = `${rutaFtp}/${process.env.CARPETAIMGGEOS}/${nombreImagenNDMI}.tiff`;
+        const nombreImagen = `${existeAnexoR.num_anexo}_imagen_DNVI.png`;
+        const nombreRutaImagen = `${__dirname}/../uploads/img/tiff/${nombreImagen}`;
+        // console.log("nombreRutaImagen", nombreRutaImagen);
+        const nombreRutaImagenFTP = `${rutaFtps}/${process.env.CARPETAIMGGEOS}/${nombreImagen}`;
+        // console.log("nombreRutaImagenFTP", nombreRutaImagenFTP);
+        fs.writeFileSync(nombreRutaImagen,  sta); 
 
-            console.log(imageNDMI.data);
+       const client =  await conexionFTP(sistema);
 
-            if(imageNDMI.data.task_type === "finished"){
-                const rawImageNDMI = await axios.get(imageNDMI.data.url, { method:'GET', responseType:'arraybuffer'});
-                            
-                fs.writeFileSync(nombreRutaImagenNDMI,  rawImageNDMI.data);
-
-                if(!client.closed){
-                    await client.uploadFrom(`${nombreRutaImagenNDMI}`, `${nombreRutaImagenFTPNDMI}`)
-                    const tamano = await client.size(nombreRutaImagenFTP);
-
-                    if(tamano <= 0){
-                        problemas.push({ok:false, msg:" imagen tiff no se subio correctamente."})
-                    }else{
-                        fs.rmSync(nombreRutaImagenNDMI)
-                    }
-                }
-            }
-
-            client.close();
-
-            const originalRes = {
-                polygon_id,
-                fecha: level.date,
-                nubosidad:level.cloudCoverage,
-                elevacionSol:level.sunElevation,
-                satelite:level.satellite,
-                imgNDMI:nombreRutaImagenFTPNDMI,
-                imgNDVI:nombreRutaImagenFTP,
-                problemas
-            }
-
-            imagenes.push( originalRes );
-
-            return imagenes;
-
-        }));
-
-        // ['landsat8' /* con fecha hasta 07-07 */, 'sentinel2' /* encontro */, 
-        // 'landsat4tm' /* no encontro */, 'landsat4mss' /* no encontro */, 
-        // 'landsat5tm'/* no encontro */, 'landsat5mss'/* no encontro */, 'cbers4mux'/* no encontro */, 
-        // 'cbers4awfi'/* no encontro */, 'cbers4pan10m'/* no encontro */, 'modis'/* encontro algo */, 'hl30'/* no encontro */,
-        //  'hs30'/* no encontro */, 'soilmoisture'/* no soporta ndvi */, 'sentinel2l2a'/*  encontro */]
+        if(!client.closed){
+            await client.uploadFrom(`${nombreRutaImagen}`, `${nombreRutaImagenFTP}`)
+            fs.rmSync(nombreRutaImagen)
+        }
+        // transformarPNG(nombreRutaImagen);
+        client.close();
 
 
-        // se crea tarea para obtener los stats
+
+
         const stats = await axios.post(
             `${process.env.URLBASESTATS}?api_key=${process.env.APIKEYGEOS}`, {
                 type:'mt_stats',
@@ -245,7 +340,7 @@ const getHighLevel = async (request, response) => {
                     sensors:["sentinel2"],
                     date_start:from,
                     date_end:to,
-                    limit,
+                    limit:1,
                     // max_cloud_cover_in_aoi:50,
                     reference:uuidv4(),
                     geometry:{
@@ -264,123 +359,55 @@ const getHighLevel = async (request, response) => {
 
         const statics = await axios.get(urlstatic);
 
-        
-        // 
-        
-        // ,
-        // 
-        
-        const Entity = 
-        (ambiente === 'desarrollo') ?
-        (sistema === 'export') ? DatoExport : DatoVegetable :
-        (sistema === 'export') ? DatoExportProd: DatoVegetableProd;
 
-        let insertProblems = [];
-        // insert para el tema imagenes.
-            for (const im of arrayImagenes ) {
+
+        const {errors, result } = statics.data;
+
+        if(errors.length > 0){
+            //recorrer errores
+        }
+
+        const nombreBdImagen = rutaBDImage(ambiente , sistema);
+
+        const imgBd = `${nombreBdImagen}/${process.env.CARPETAIMGGEOS}/${nombreImagen}`
+
+        if(result.length > 0){
+
+            for (const estadisticas of result ) {
                 
-                const where  = {
-                    where:{
-                        [Op.and]:[
-                            {id_poligono_geos:im[0].polygon_id},
-                            {fecha_imagen_ndvi:im[0].fecha}
-                        ]
-                    },
-                    limit: 1
-                }
-                
-                const existeGeos = await Entity.findOne(where);
+                const existeDato = await bdCon.query(`SELECT * FROM datos_geos WHERE id_poligono_geos = ${polygon_id} `);
 
 
-                let stats_max_ndvi = 0;
-                let stats_min_ndvi = 0;
-                let stats_average_ndvi = 0;
-                let stats_max_ndmi = 0;
-                let stats_min_ndmi = 0;
-                let stats_average_ndmi = 0;
-                let fecha_stats_ndvi = '';
-                let fecha_stats_ndmi = '';
-                let obs_stats_error = '';
+                if(existeDato[0].length > 0){
+                    console.log(existeDato[0][0]);
 
-                if( statics.data.errors ){
-                    fecha_stats_ndvi = statics.data.errors[0].date;
-                    fecha_stats_ndmi = statics.data.errors[0].date;
-                    obs_stats_error = statics.data.errors[0].error;
-                }else if(statics.data.result){
-                    fecha_stats_ndvi = statics.data.result[0].date;
-                    fecha_stats_ndmi = statics.data.result[0].date;
-                    stats_max_ndvi = statics.data.result[0].indexes.NDVI.max;
-                    stats_min_ndvi = statics.data.result[0].indexes.NDVI.min;
-                    stats_average_ndvi = statics.data.result[0].indexes.NDVI.average;
-                    stats_max_ndmi = statics.data.result[0].indexes.NDMI.max;
-                    stats_min_ndmi = statics.data.result[0].indexes.NDMI.min;
-                    stats_average_ndmi = statics.data.result[0].indexes.NDMI.average;
-                }
-
-
-                if(existeGeos){
-                    //update
-                    const update = await Entity.update(
-                        {
-                            ruta_ndvi_imagen:im[0].imgNDVI,
-                            ruta_ndmi_imagen:im[0].imgNDVI,
-                            fecha_stats_ndvi,
-                            fecha_stats_ndmi,
-                            stats_max_ndvi,
-                            stats_min_ndvi,
-                            stats_average_ndvi,
-                            stats_max_ndmi,
-                            stats_min_ndmi,
-                            stats_average_ndmi,
-                            obs_stats_error
-
-                        },
-                        {  where:{ id_dato_geos : existeGeos.id_dato_geos } }
-                    )
-
-                    if(!update){
-                        insertProblems.push({lugar:"update geos",problem: update})
-                    }
+                    const sql = `UPDATE datos_geos  SET
+                    ruta_ndvi_imagen = '${imgBd}',fecha_imagen_ndvi = '${estadisticas.date}', 
+                    fecha_stats_ndvi = '${resultadoView[0].date}', stats_average_ndvi = '${estadisticas.indexes.NDVI.average}'  
+                    WHERE id_poligono_geos = ${polygon_id};`;
+                    // console.log(sql)
+                    await bdCon.query(sql);
                 }else{
-                    //insert
-                    const nuevo = await Entity.create(
-                        {
-                            id_poligono_geos:im[0].polygon_id, 
-                            ruta_ndvi_imagen:im[0].imgNDVI,
-                            ruta_ndmi_imagen:im[0].imgNDVI,
-                            fecha_imagen_ndvi:im[0].fecha,
-                            fecha_imagen_ndmi:im[0].fecha,
-                            fecha_stats_ndvi,
-                            fecha_stats_ndmi,
-                            stats_max_ndvi,
-                            stats_min_ndvi,
-                            stats_average_ndvi,
-                            stats_max_ndmi,
-                            stats_min_ndmi,
-                            stats_average_ndmi,
-                            obs_stats_error
-                        }
-                    );
-    
-                    if(!nuevo){
-                        insertProblems.push({lugar:"insert geos",problem: nuevo})
-                    }
+                    const sql = `INSERT INTO datos_geos 
+                    (id_poligono_geos, ruta_ndvi_imagen,fecha_imagen_ndvi, fecha_stats_ndvi, stats_average_ndvi ) 
+                    VALUES (${polygon_id}, '${imgBd}', '${resultadoView[0].date}', '${estadisticas.date}', '${estadisticas.indexes.NDVI.average}');`;
+
+                    // console.log(sql)
+
+                    await bdCon.query(sql);
                 }
             }
+        }
 
-
-
-            //insert para el tema de los stats
-            return response.status(200).json({
-                ok:true,
-                img: arrayImagenes,
-                stats:statics.data,
-                insertProblems
-            });
+        bdCon.close();
+        return response.status(201).json({
+            ok:true, msg:"se encontro todo"
+        })
 
     }catch( err ){
         console.log("==============================");
         console.log(err, 'Error conectandose a API');  
+        console.log(err.response)
         response.status(500).json({ ok:false, msg:err }) 
     }
 }
