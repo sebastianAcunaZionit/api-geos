@@ -360,16 +360,41 @@ const getHighLevel = async (request, response) => {
         const statics = await axios.get(urlstatic);
 
 
+        const nombreBdImagen = rutaBDImage(ambiente , sistema);
+
+        const imgBd = `${nombreBdImagen}/${process.env.CARPETAIMGGEOS}/${nombreImagen}`
+
 
         const {errors, result } = statics.data;
 
         if(errors.length > 0){
             //recorrer errores
+
+            const existeDato = await bdCon.query(`SELECT * FROM datos_geos WHERE id_poligono_geos = ${polygon_id} `);
+
+
+            if(existeDato[0].length > 0){
+                console.log(existeDato[0][0]);
+
+                const sql = `UPDATE datos_geos  SET
+                ruta_ndvi_imagen = '${imgBd}',fecha_imagen_ndvi = '${resultadoView[0].date}', 
+                obs_stats_error = '${errors[0].date} ${errors[0].error}'
+                WHERE id_poligono_geos = ${polygon_id};`;
+                // console.log(sql)
+                await bdCon.query(sql);
+            }else{
+                const sql = `INSERT INTO datos_geos 
+                (id_poligono_geos, ruta_ndvi_imagen,fecha_imagen_ndvi, obs_stats_error ) 
+                VALUES (${polygon_id}, '${imgBd}', '${resultadoView[0].date}', '${errors[0].date} ${errors[0].error}');`;
+
+                // console.log(sql)
+
+                await bdCon.query(sql);
+            }
+
         }
 
-        const nombreBdImagen = rutaBDImage(ambiente , sistema);
-
-        const imgBd = `${nombreBdImagen}/${process.env.CARPETAIMGGEOS}/${nombreImagen}`
+        
 
         if(result.length > 0){
 
@@ -382,15 +407,16 @@ const getHighLevel = async (request, response) => {
                     console.log(existeDato[0][0]);
 
                     const sql = `UPDATE datos_geos  SET
-                    ruta_ndvi_imagen = '${imgBd}',fecha_imagen_ndvi = '${estadisticas.date}', 
-                    fecha_stats_ndvi = '${resultadoView[0].date}', stats_average_ndvi = '${estadisticas.indexes.NDVI.average}'  
+                    ruta_ndvi_imagen = '${imgBd}',fecha_imagen_ndvi = '${resultadoView[0].date}', 
+                    fecha_stats_ndvi = '${estadisticas.date}', stats_average_ndvi = '${estadisticas.indexes.NDVI.average}'  
                     WHERE id_poligono_geos = ${polygon_id};`;
                     // console.log(sql)
                     await bdCon.query(sql);
                 }else{
                     const sql = `INSERT INTO datos_geos 
                     (id_poligono_geos, ruta_ndvi_imagen,fecha_imagen_ndvi, fecha_stats_ndvi, stats_average_ndvi ) 
-                    VALUES (${polygon_id}, '${imgBd}', '${resultadoView[0].date}', '${estadisticas.date}', '${estadisticas.indexes.NDVI.average}');`;
+                    VALUES (${polygon_id}, '${imgBd}', '${resultadoView[0].date}', '${estadisticas.date}', 
+                    '${estadisticas.indexes.NDVI.average}');`;
 
                     // console.log(sql)
 
@@ -401,7 +427,7 @@ const getHighLevel = async (request, response) => {
 
         // bdCon.close();
         return response.status(201).json({
-            ok:true, msg:"se encontro todo"
+            ok:true, msg:"se encontro todo", errors
         })
 
     }catch( err ){
