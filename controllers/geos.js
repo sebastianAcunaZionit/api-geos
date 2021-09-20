@@ -399,7 +399,7 @@ const getHighLevel = async (request, response) => {
             }
         }
 
-        bdCon.close();
+        // bdCon.close();
         return response.status(201).json({
             ok:true, msg:"se encontro todo"
         })
