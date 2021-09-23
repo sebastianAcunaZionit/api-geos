@@ -60,6 +60,8 @@ const prepararKmz = async ( files ) => {
 
     const LatLongKmz = parsedKmz.features[0].geometry.coordinates[0];
 
+    console.log("coordenadas kmz", parsedKmz.features[0]);
+
     const coordenadas = LatLongKmz.map( ( punto, index ) => {
         punto.pop();
         return punto;
