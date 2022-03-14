@@ -63,7 +63,7 @@ class Server{
     middlewares(){
 
         this.app.use( cors( {
-            origin: "*",
+            origin: "http://www.zcloud.cl",
             methods:["POST", "GET", "PUT"]
         }) );
 
