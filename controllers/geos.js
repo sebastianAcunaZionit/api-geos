@@ -58,21 +58,20 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 
 
 const rutaFtp = (ambiente , sistema) => {
-    return (ambiente == "desarrollo") ?
-            (sistema == "export") ? 
+    return (ambiente == "desarrollo") 
+            ? (sistema == "export") ? 
                 `${process.env.RUTAFTP}/${process.env.RUTAVAR}` : 
                 `${process.env.RUTAFTPVEGETABLES}/${process.env.RUTAVARVEG}` 
-            :
-            (sistema == "export") ? 
+            : (sistema == "export") ? 
                 `${process.env.RUTAFTPPROD}/${process.env.RUTAVAR}`:  
                 `${process.env.RUTAFTPVEGETABLESPROD}/${process.env.RUTAVARVEG}` ;
 }
 
 
 const rutaBDImage = (ambiente , sistema) => {
-    return (ambiente == "desarrollo") ?
-    (sistema == "export") ? `${process.env.RUTAVAR}` : `${process.env.RUTAVARVEG}` :
-    (sistema == "export") ? `${process.env.RUTAVAR}`:  `${process.env.RUTAVARVEG}` ;
+    return (ambiente == "desarrollo") 
+            ? (sistema == "export") ? `${process.env.RUTAVAR}` : `${process.env.RUTAVARVEG}` 
+            : (sistema == "export") ? `${process.env.RUTAVAR}`:  `${process.env.RUTAVARVEG}` ;
 }
 
 const obtenerViewId = async (jsonReq = {}) => {
@@ -97,8 +96,6 @@ const obtenerViewId = async (jsonReq = {}) => {
 }
 
 const crearTareaImagen = async (jsonReq = {}) => {
-
-
     try{
 
         const resp = await axios.post(
@@ -107,7 +104,6 @@ const crearTareaImagen = async (jsonReq = {}) => {
             { headers:{ 'Content-Type':'application/json' } }
         );
         return resp.data;
-
     }catch(error){
         return error;
     }
@@ -115,16 +111,11 @@ const crearTareaImagen = async (jsonReq = {}) => {
 
 
 const fieldExiste = async (field_id) => {
-
-      // se consulta por poligono en eos
-      try{
+    // se consulta por poligono en eos
+    try{
         const poligono =  await axios.get(`https://gate.eos.com/api/cz/backend/api/field/${field_id}?api_key=${ process.env.APIKEYGEOS }`);
-
         return poligono.data;
-
-    }catch( error ){
-        return null;
-    }
+    }catch( error ){ return null;  }
     
 }
 
@@ -134,15 +125,12 @@ const poligonoExiste = async (polygon_id) => {
     // se consulta por poligono en eos
     try{
         const poligono =  await axios.get(`${process.env.URLBASEFEATURE}/${polygon_id}`,
-        {headers:{
-            "Authorization":`ApiKey ${ process.env.APIKEYGEOS }`
-        }});
-
+        {
+            headers:{ "Authorization":`ApiKey ${ process.env.APIKEYGEOS }`}
+        });
         return poligono.data;
 
-    }catch( error ){
-        return null;
-    }
+    }catch( error ){  return null;  }
     
     
 }
@@ -150,13 +138,13 @@ const poligonoExiste = async (polygon_id) => {
 const taskStatus = async(task_id, responseType) => {
 
       // se consulta por poligono en eos
-      try{
+    try{
         const task =  await axios.get(`https://gate.eos.com/api/gdw/api/${task_id}?api_key=${ process.env.APIKEYGEOS }`, {responseType:responseType});
             return task.data;
-        }catch( error ){
-            console.log("entro a error task status", error)
-            return null;
-        }
+    }catch( error ){
+        console.log("entro a error task status", error)
+        return null;
+    }
 }
 
 
@@ -174,9 +162,7 @@ const conexionFTP = async (sistema) =>{
         });
 
         return client;
-    } catch (error) {
-        return null;
-    }
+    } catch (error) { return null; }
 
 
 }
@@ -276,8 +262,10 @@ const getHighLevel = async (request, response) => {
                     type:"Polygon",
                     coordinates
                 },
-                px_size:4,
+                px_size:2,
                 format:"png",
+                colormap:'2b0040e4100279573a41138c8a30c1f2',
+                levels:'0,1',
                 reference:uuidv4()
             }
         }
@@ -365,8 +353,9 @@ const getHighLevel = async (request, response) => {
         const imgBd = `${nombreBdImagen}/${process.env.CARPETAIMGGEOS}/${nombreImagen}`
 
 
-        const {errors, result } = statics.data;
+        const {errors = [], result } = statics.data;
 
+        console.log(errors)
         if(errors.length > 0){
             //recorrer errores
 
@@ -454,9 +443,6 @@ const deleteField = async(request, response) => {
         });
 
         const resp = await instancia.delete();
-
-
-
     }catch( err ){
         console.log("==============================");
         console.log(err, 'Error conectandose a API');  
