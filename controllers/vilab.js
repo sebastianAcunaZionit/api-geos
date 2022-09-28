@@ -33,18 +33,17 @@ const getPredios = async (anexoBusca) => {
             method:'get'
         });
         const resp = await instancia.get();
-        // console.log("primero", resp.status);
         const predios = resp.data.predios;
         const encontro = predios.filter( item => item.Lote === anexoBusca );
 
-
-        return encontro;
+        // console.log(resp);
+        return {ok:true, data:encontro, msg:'encontro'};
 
     }catch( err ){
         console.log("==============================");
         console.log(err, 'Error conectandose a API');  
 
-        return { error: err.response.data.error };
+        return { ok:false, data:[], msg: err.response.data.error };
     }
 
 }
@@ -121,8 +120,16 @@ const getAllPredios = async (request , response) => {
 
     try{
         const encontro  = await getPredios(anexoBusca);
+        // console.log(encontro);
+        if(!encontro.ok){
+            return response.status(500).json({ msg:`${encontro?.msg || 'Error generico, contacte a administrador'}`, resp:encontro, fechas:fechas[0] })
+        }
 
-        const fechas = await getFechasByPredio(encontro[0].Id, tipo);
+        if(encontro.data.length <= 0){
+            return response.status(500).json({ msg:`${'No se encontro anexo solicitado'}`, resp:null, fechas:null })
+        }
+
+        const fechas = await getFechasByPredio(encontro.data[0].Id, tipo);
 
 
         var buf = Buffer.from(fechas[0].indices[0].Png, 'base64');
@@ -192,7 +199,7 @@ const getAllPredios = async (request , response) => {
     
         // const updateAnexo  = await Anexo.update()
     
-        await Anexo.update({id_vilab:encontro[0].Id}, {where:{num_anexo:anexo}});
+        await Anexo.update({id_vilab:encontro.data[0].Id}, {where:{num_anexo:anexo}});
 
 
         const fallidas = fechas[0].fallidas;
@@ -204,7 +211,7 @@ const getAllPredios = async (request , response) => {
         // console.log(fechas[0].fallidas);
 
 
-        const datos  = await Entity.findAll({where:{id_vilab:encontro[0].Id, fecha_imagen_ndvi:fechas[0].Fecha}});
+        const datos  = await Entity.findAll({where:{id_vilab:encontro.data[0].Id, fecha_imagen_ndvi:fechas[0].Fecha}});
         if(datos.length > 0){
 
             
@@ -222,7 +229,7 @@ const getAllPredios = async (request , response) => {
                 promedio_vilab:fechas[0].indices[0].Promedio, 
                 ruta_img_vilab:fechas[0].indices[0].imageLocal,
                 fecha_imagen_ndvi:fechas[0].Fecha,
-                id_vilab:encontro[0].Id
+                id_vilab:encontro.data[0].Id
             }
             );
 
