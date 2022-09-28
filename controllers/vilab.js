@@ -122,11 +122,11 @@ const getAllPredios = async (request , response) => {
         const encontro  = await getPredios(anexoBusca);
         // console.log(encontro);
         if(!encontro.ok){
-            return response.status(500).json({ msg:`${encontro?.msg || 'Error generico, contacte a administrador'}`, resp:encontro, fechas:fechas[0] })
+            return response.status(500).json({ ok:false, msg:`${encontro?.msg || 'Error generico, contacte a administrador'}`, resp:encontro, fechas:fechas[0] })
         }
 
         if(encontro.data.length <= 0){
-            return response.status(500).json({ msg:`${'No se encontro anexo solicitado'}`, resp:null, fechas:null })
+            return response.status(500).json({ ok:false, msg:`${'No se encontro anexo solicitado'}`, resp:null, fechas:null })
         }
 
         const fechas = await getFechasByPredio(encontro.data[0].Id, tipo);
@@ -234,7 +234,7 @@ const getAllPredios = async (request , response) => {
             );
 
         }
-        return response.status(200).json({ resp:encontro, fechas:fechas[0] })
+        return response.status(200).json({ ok:true, resp:encontro, fechas:fechas[0] })
 
         // const updateDatos = await Entity.
 
