@@ -116,11 +116,11 @@ const getIndicesByFechaAndPredios = async (id, fecha, tipo) => {
 const getAllPredios = async (request , response) => {
 
     const { anexo, tipo = 0, sistema = 'export', ambiente = 'produccion' } = request.query;
-    const anexoBusca = anexo.split("-")[1];
+    // const anexoBusca = anexo.split("-")[1];
+    const anexoBusca = anexo;
 
     try{
         const encontro  = await getPredios(anexoBusca);
-        // console.log(encontro);
         if(!encontro.ok){
             return response.status(500).json({ ok:false, msg:`${encontro?.msg || 'Error generico, contacte a administrador'}`, resp:encontro, fechas:fechas[0] })
         }
