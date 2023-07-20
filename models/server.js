@@ -1,107 +1,102 @@
-const express = require('express')
-const cors = require('cors');
-const fileUpload = require('express-fileupload');
-const  { 
-    dbExport, dbVegetables, 
-    dbExportProd, dbVegetablesProd 
-}  = require('../database/connection');
+const express = require("express");
+const cors = require("cors");
+const fileUpload = require("express-fileupload");
+const {
+  dbExport,
+  dbVegetables,
+  dbExportProd,
+  dbVegetablesProd,
+  dbExportPrueb,
+  dbVegetablesPrueb,
+} = require("../database/connection");
 
-class Server{
+class Server {
+  constructor() {
+    this.baseUrl = "/api";
 
-    constructor(){
+    this.app = express();
+    this.port = process.env.PORT;
 
-        this.baseUrl = '/api';
+    this.server = require("http").createServer(this.app);
 
-        this.app = express();
-        this.port = process.env.PORT;
+    this.rutas = {
+      geos: `${this.baseUrl}/geos`,
+      vilab: `${this.baseUrl}/vilab`,
+      geometry: `${this.baseUrl}/geometry`,
+      uploads: `${this.baseUrl}/uploads`,
+      fields: `${this.baseUrl}/fields`,
+    };
 
-        this.server = require('http').createServer( this.app );
+    // this.conectarDB();
+    this.dbConnection();
 
+    this.middlewares();
 
-        this.rutas = {
-            geos: `${this.baseUrl}/geos`,
-            vilab: `${this.baseUrl}/vilab`,
-            geometry: `${this.baseUrl}/geometry`,
-            uploads: `${this.baseUrl}/uploads`,
-            fields: `${this.baseUrl}/fields`
-        }
+    this.routes();
+  }
 
+  async dbConnection() {
+    try {
+      await dbExport.authenticate();
+      console.log("Database Export Online...");
 
-        // this.conectarDB();
-        this.dbConnection();
+      await dbVegetables.authenticate();
+      console.log("Database Vegetables Online...");
 
-        this.middlewares();
+      await dbExportProd.authenticate();
+      console.log("Database export Produccion Online...");
 
-        this.routes();
+      await dbVegetablesProd.authenticate();
+      console.log("Database Vegetables Produccion Online...");
 
+      await dbExportPrueb.authenticate();
+      console.log("Database export Pruebas Online...");
+
+      await dbVegetablesPrueb.authenticate();
+      console.log("Database Vegetables Pruebas Online...");
+
+      // dbExport.close();
+    } catch (error) {
+      throw new Error(error);
     }
+  }
 
-    async dbConnection(){
+  middlewares() {
+    this.app.use(
+      cors({
+        origin: "http://www.zcloud.cl",
+        methods: ["POST", "GET", "PUT"],
+      })
+    );
 
-        try {
+    // lectura y parseo del body
+    this.app.use(express.json());
 
-            await dbExport.authenticate();
-            console.log('Database Export Online...');
+    //directorio publico
+    this.app.use(express.static("public"));
 
-            await dbVegetables.authenticate();
-            console.log('Database Vegetables Online...');
+    // carga de archivos
+    this.app.use(
+      fileUpload({
+        useTempFiles: true,
+        tempFileDir: "/tmp/",
+      })
+    );
+  }
 
-            await dbExportProd.authenticate();
-            console.log('Database export Produccion Online...');
+  routes() {
+    this.app.use(this.rutas.geos, require("../routers/geos"));
+    this.app.use(this.rutas.geometry, require("../routers/geometry"));
+    this.app.use(this.rutas.uploads, require("../routers/uploads"));
+    this.app.use(this.rutas.fields, require("../routers/fields"));
+    this.app.use(this.rutas.vilab, require("../routers/vilab"));
+  }
 
-            await dbVegetablesProd.authenticate();
-            console.log('Database Vegetables Produccion Online...');
-
-            // dbExport.close();
-
-        } catch ( error ) {
-            throw new Error( error );
-        }
-
-    }
-
-    middlewares(){
-
-        this.app.use( cors( {
-            origin: "http://www.zcloud.cl",
-            methods:["POST", "GET", "PUT"]
-        }) );
-
-         // lectura y parseo del body
-         this.app.use(express.json());
-
-
-         //directorio publico
-         this.app.use( express.static('public') );
-
-         // carga de archivos
-         this.app.use(fileUpload({
-             useTempFiles: true,
-             tempFileDir: '/tmp/'
-         }))
-
-    }
-
-
-    routes(){
-        this.app.use(this.rutas.geos, require('../routers/geos'))
-        this.app.use(this.rutas.geometry, require('../routers/geometry'))
-        this.app.use(this.rutas.uploads, require('../routers/uploads'))
-        this.app.use(this.rutas.fields, require('../routers/fields'))
-        this.app.use(this.rutas.vilab, require('../routers/vilab'))
-    }
-
-
-    listen(){
-        this.server.listen(this.port, () => {
-            console.log(`Sistema corriendo en puerto : ${this.port}`);
-        })
-    }
-
-
-
-
+  listen() {
+    this.server.listen(this.port, () => {
+      console.log(`Sistema corriendo en puerto : ${this.port}`);
+    });
+  }
 }
-
 
 module.exports = Server;
